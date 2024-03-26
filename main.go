@@ -1,15 +1,21 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
+	"api/src/config"
 	"api/src/router"
 )
 
 func main() {
+	config.Load()
+
+	fmt.Println(config.DBStringConnection)
+
 	r := router.Generate()
 
-	log.Println("Listening to port 8080")
-	log.Fatal(http.ListenAndServe(":8080", r))
+	log.Printf("Listening to port %d", config.Port)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Port), r))
 }
