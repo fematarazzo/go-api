@@ -1,34 +1,58 @@
 package config
 
 import (
+	"bufio"
 	"fmt"
 	"log"
 	"os"
 	"strconv"
-
-	"github.com/joho/godotenv"
+	"strings"
 )
 
 var (
 	DBStringConnection = ""
+	DBUser             = ""
+	DBPassword         = ""
+	DBName             = ""
 	Port               = 0
 )
 
-func Load() {
-	var error error
-
-	if error := godotenv.Load(); error != nil {
+func loadEnvFromFile() error {
+	file, error := os.Open(".env")
+	if error != nil {
 		log.Fatal(error)
 	}
 
-	Port, error = strconv.Atoi(os.Getenv("API_PORT"))
-	if error != nil {
-		Port = 9000
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		parts := strings.SplitN(line, "=", 2)
+		switch parts[0] {
+		case "DB_USER":
+			DBUser = parts[1]
+		case "DB_PASSWORD":
+			DBPassword = parts[1]
+		case "DB_NAME":
+			DBName = parts[1]
+		case "API_PORT":
+			Port, error = strconv.Atoi(parts[1])
+			if error != nil {
+				Port = 9000
+			}
+		}
+
 	}
 
+	return nil
+}
+
+func Load() {
+	loadEnvFromFile()
 	DBStringConnection = fmt.Sprintf("%s:%s@/%s?charset=utf8&parseTime=True&loc=Local",
-		os.Getenv("DB_USER"),
-		os.Getenv("DB_PASSWORD"),
-		os.Getenv("DB_NAME"),
+		DBUser,
+		DBPassword,
+		DBName,
 	)
 }
