@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strings"
 
 	"api/src/database"
 	"api/src/models"
@@ -21,6 +22,11 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 
 	if error = json.Unmarshal(bodyRequest, &user); error != nil {
+		responses.Error(w, http.StatusBadRequest, error)
+		return
+	}
+
+	if error := user.Prepare(); error != nil {
 		responses.Error(w, http.StatusBadRequest, error)
 		return
 	}
@@ -45,7 +51,23 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func ReadUsers(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Fetching all users\n"))
+	nameOrNickname := strings.ToLower(r.URL.Query().Get("user"))
+
+	db, error := database.Connect()
+	if error != nil {
+		responses.Error(w, http.StatusInternalServerError, error)
+		return
+	}
+	defer db.Close()
+
+	repository := repositories.NewUsersRepository(db)
+	users, error := repository.Search(nameOrNickname)
+	if error != nil {
+		responses.Error(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	responses.JSON(w, http.StatusOK, users)
 }
 
 func ReadUser(w http.ResponseWriter, r *http.Request) {
