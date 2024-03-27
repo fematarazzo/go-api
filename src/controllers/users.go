@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"api/src/database"
@@ -71,7 +72,27 @@ func ReadUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 func ReadUser(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Fetching a user\n"))
+	userID, error := strconv.ParseUint(r.PathValue("id"), 10, 64)
+	if error != nil {
+		responses.Error(w, http.StatusBadRequest, error)
+		return
+	}
+
+	db, error := database.Connect()
+	if error != nil {
+		responses.Error(w, http.StatusInternalServerError, error)
+		return
+	}
+	defer db.Close()
+
+	repository := repositories.NewUsersRepository(db)
+	user, error := repository.SearchByID(userID)
+	if error != nil {
+		responses.Error(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	responses.JSON(w, http.StatusOK, user)
 }
 
 func UpdateUser(w http.ResponseWriter, r *http.Request) {

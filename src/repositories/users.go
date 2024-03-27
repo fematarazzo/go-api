@@ -67,3 +67,21 @@ func (repository users) Search(nameOrNickname string) ([]models.User, error) {
 
 	return users, nil
 }
+
+func (repository users) SearchByID(ID uint64) (models.User, error) {
+	lines, error := repository.db.Query("select id, name, nickname, email, createdAt from users where id = ?", ID)
+	if error != nil {
+		return models.User{}, error
+	}
+	defer lines.Close()
+
+	var user models.User
+
+	if lines.Next() {
+		if error = lines.Scan(&user.ID, &user.Name, &user.Nickname, &user.Email, &user.CreatedAt); error != nil {
+			return models.User{}, error
+		}
+	}
+
+	return user, nil
+}
