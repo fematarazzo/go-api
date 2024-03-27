@@ -44,7 +44,10 @@ func loadEnvFromFile() error {
 		default:
 			log.Fatal(error)
 		}
+	}
 
+	if error := scanner.Err(); error != nil {
+		return error
 	}
 
 	return nil
