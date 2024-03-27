@@ -41,6 +41,8 @@ func loadEnvFromFile() error {
 			if error != nil {
 				Port = 9000
 			}
+		default:
+			log.Fatal(error)
 		}
 
 	}
