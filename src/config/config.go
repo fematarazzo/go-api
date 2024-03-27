@@ -54,7 +54,9 @@ func loadEnvFromFile() error {
 }
 
 func Load() {
-	loadEnvFromFile()
+	if error := loadEnvFromFile(); error != nil {
+		log.Fatal(error)
+	}
 	DBStringConnection = fmt.Sprintf("%s:%s@/%s?charset=utf8&parseTime=True&loc=Local",
 		DBUser,
 		DBPassword,
