@@ -2,8 +2,11 @@ package models
 
 import (
 	"errors"
+	"net/mail"
 	"strings"
 	"time"
+
+	"api/src/security"
 )
 
 type User struct {
@@ -20,7 +23,9 @@ func (user *User) Prepare(step string) error {
 		return error
 	}
 
-	user.format()
+	if error := user.format(step); error != nil {
+		return error
+	}
 	return nil
 }
 
@@ -37,6 +42,11 @@ func (user *User) validate(step string) error {
 		return errors.New("Email is mandatory and cannot be empty")
 	}
 
+	_, error := mail.ParseAddress(user.Email)
+	if error != nil {
+		return errors.New("Invalid email")
+	}
+
 	if user.Password == "" && step == "registration" {
 		return errors.New("Password is mandatory and cannot be empty")
 	}
@@ -44,8 +54,19 @@ func (user *User) validate(step string) error {
 	return nil
 }
 
-func (user *User) format() {
+func (user *User) format(step string) error {
 	user.Name = strings.TrimSpace(user.Name)
 	user.Nickname = strings.TrimSpace(user.Nickname)
 	user.Email = strings.TrimSpace(user.Email)
+
+	if step == "registration" {
+		passwordHash, error := security.Hash(user.Password)
+		if error != nil {
+			return error
+		}
+
+		user.Password = string(passwordHash)
+	}
+
+	return nil
 }
