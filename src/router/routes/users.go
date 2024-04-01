@@ -13,21 +13,21 @@ var routesUsers = []Route{
 	{
 		URI:                   "GET /users",
 		Function:              controllers.ReadUsers,
-		RequireAuthentication: false,
+		RequireAuthentication: true,
 	},
 	{
 		URI:                   "GET /users/{id}",
 		Function:              controllers.ReadUser,
-		RequireAuthentication: false,
+		RequireAuthentication: true,
 	},
 	{
 		URI:                   "PUT /users/{id}",
 		Function:              controllers.UpdateUser,
-		RequireAuthentication: false,
+		RequireAuthentication: true,
 	},
 	{
 		URI:                   "DELETE /users/{id}",
 		Function:              controllers.DeleteUser,
-		RequireAuthentication: false,
+		RequireAuthentication: true,
 	},
 }
