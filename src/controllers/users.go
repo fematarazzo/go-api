@@ -2,11 +2,13 @@ package controllers
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"strconv"
 	"strings"
 
+	"api/src/authentication"
 	"api/src/database"
 	"api/src/models"
 	"api/src/repositories"
@@ -102,6 +104,17 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userIDinToken, error := authentication.ExtractUserID(r)
+	if error != nil {
+		responses.Error(w, http.StatusUnauthorized, error)
+		return
+	}
+
+	if userID != userIDinToken {
+		responses.Error(w, http.StatusForbidden, errors.New("Cannot update other user"))
+		return
+	}
+
 	bodyRequest, error := io.ReadAll(r.Body)
 	if error != nil {
 		responses.Error(w, http.StatusUnprocessableEntity, error)
@@ -140,6 +153,17 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	userID, error := strconv.ParseUint(r.PathValue("id"), 10, 64)
 	if error != nil {
 		responses.Error(w, http.StatusBadRequest, error)
+		return
+	}
+
+	userIDinToken, error := authentication.ExtractUserID(r)
+	if error != nil {
+		responses.Error(w, http.StatusUnauthorized, error)
+		return
+	}
+
+	if userID != userIDinToken {
+		responses.Error(w, http.StatusForbidden, errors.New("Cannot delete other user"))
 		return
 	}
 
