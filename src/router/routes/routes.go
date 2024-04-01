@@ -1,6 +1,10 @@
 package routes
 
-import "net/http"
+import (
+	"net/http"
+
+	"api/src/middleware"
+)
 
 type Route struct {
 	URI                   string
@@ -10,9 +14,14 @@ type Route struct {
 
 func Configure(r *http.ServeMux) *http.ServeMux {
 	routes := routesUsers
+	routes = append(routes, routeLogin)
 
 	for _, route := range routes {
-		r.HandleFunc(route.URI, route.Function)
+		if route.RequireAuthentication {
+			r.HandleFunc(route.URI, middleware.Logger(middleware.Authenticate(route.Function)))
+		} else {
+			r.HandleFunc(route.URI, middleware.Logger(route.Function))
+		}
 	}
 
 	return r
